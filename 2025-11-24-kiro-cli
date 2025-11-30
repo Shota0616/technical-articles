@@ -1,0 +1,1003 @@
+# 概要
+
+今回は、<font color="red">**Kiro CLI（旧 Amazon Q Developer CLI）**</font>の便利な使用方法について紹介できればと思います。本当に便利すぎて、Kior CLIが無い生活は考えられないくらい使用しています。 (笑)
+本記事では、Kiro CLIのセットアップ方法などではなく、カスタムエージェントの設定方法や実際の用途などについてお話しします。
+
+- AWSのドキュメント内での調査
+- AWSの価格調査
+- 構成図の作成
+- Terraform / Ansibleのコーディング
+...etc
+
+
+```
+⠀⠀⠀⠀⠀⠀⠀     ⢀⣴⣶⣶⣦⡀⠀⠀⠀⢀⣴⣶⣦⣄⡀⠀⠀⢀⣴⣶⣶⣦⡀⠀⠀⢀⣴⣶⣶⣶⣶⣶⣶⣶⣶⣶⣦⣄⡀⠀⠀⠀⠀⠀⠀⢀⣠⣴⣶⣶⣶⣶⣶⣦⣄⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀    ⢰⣿⠋⠁⠈⠙⣿⡆⠀⢀⣾⡿⠁⠀⠈⢻⡆⢰⣿⠋⠁⠈⠙⣿⡆⢰⣿⠋⠁⠀⠀⠀⠀⠀⠀⠀⠀⠈⠙⠻⣦⠀⠀⠀⠀⣴⡿⠟⠋⠁⠀⠀⠀⠈⠙⠻⢿⣦⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀    ⢸⣿⠀⠀⠀⠀⣿⣇⣴⡿⠋⠀⠀⠀⢀⣼⠇⢸⣿⠀⠀⠀⠀⣿⡇⢸⣿⠀⠀⠀⢠⣤⣤⣤⣤⣄⠀⠀⠀⠀⣿⡆⠀⠀⣼⡟⠀⠀⠀⠀⣀⣀⣀⠀⠀⠀⠀⢻⣧⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀    ⢸⣿⠀⠀⠀⠀⣿⡿⠋⠀⠀⠀⢀⣾⡿⠁⠀⢸⣿⠀⠀⠀⠀⣿⡇⢸⣿⠀⠀⠀⢸⣿⠉⠉⠉⣿⡇⠀⠀⠀⣿⡇⠀⣼⡟⠀⠀⠀⣰⡿⠟⠛⠻⢿⣆⠀⠀⠀⢻⣧⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀    ⢸⣿⠀⠀⠀⠀⠙⠁⠀⠀⢀⣼⡟⠁⠀⠀⠀⢸⣿⠀⠀⠀⠀⣿⡇⢸⣿⠀⠀⠀⢸⣿⣶⣶⡶⠋⠀⠀⠀⠀⣿⠇⢰⣿⠀⠀⠀⢰⣿⠀⠀⠀⠀⠀⣿⡆⠀⠀⠀⣿⡆
+⠀⠀⠀⠀⠀⠀⠀    ⢸⣿⠀⠀⠀⠀⠀⠀⠀⠀⠹⣷⡀⠀⠀⠀⠀⢸⣿⠀⠀⠀⠀⣿⡇⢸⣿⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣠⣼⠟⠀⢸⣿⠀⠀⠀⢸⣿⠀⠀⠀⠀⠀⣿⡇⠀⠀⠀⣿⡇
+⠀⠀⠀⠀⠀⠀⠀    ⢸⣿⠀⠀⠀⠀⠀⣠⡀⠀⠀⠹⣷⡄⠀⠀⠀⢸⣿⠀⠀⠀⠀⣿⡇⢸⣿⠀⠀⠀⠀⣤⣄⠀⠀⠀⠀⠹⣿⡅⠀⠀⠸⣿⠀⠀⠀⠸⣿⠀⠀⠀⠀⠀⣿⠇⠀⠀⠀⣿⠇
+⠀⠀⠀⠀⠀⠀⠀    ⢸⣿⠀⠀⠀⠀⣾⡟⣷⡀⠀⠀⠘⣿⣆⠀⠀⢸⣿⠀⠀⠀⠀⣿⡇⢸⣿⠀⠀⠀⠀⣿⡟⣷⡀⠀⠀⠀⠘⣿⣆⠀⠀⢻⣧⠀⠀⠀⠹⣷⣦⣤⣤⣾⠏⠀⠀⠀⣼⡟
+⠀⠀⠀⠀⠀⠀⠀    ⢸⣿⠀⠀⠀⠀⣿⡇⠹⣷⡀⠀⠀⠈⢻⡇⠀⢸⣿⠀⠀⠀⠀⣿⡇⢸⣿⠀⠀⠀⠀⣿⡇⠹⣷⡀⠀⠀⠀⠈⢻⡇⠀⠀⢻⣧⠀⠀⠀⠀⠉⠉⠉⠀⠀⠀⠀⣼⡟
+⠀⠀⠀⠀⠀⠀⠀    ⠸⣿⣄⡀⢀⣠⣿⠇⠀⠙⣷⡀⠀⢀⣼⠇⠀⠸⣿⣄⡀⢀⣠⣿⠇⠸⣿⣄⡀⢀⣠⣿⠇⠀⠙⣷⡀⠀⠀⢀⣼⠇⠀⠀⠀⠻⣷⣦⣄⡀⠀⠀⠀⢀⣠⣴⣾⠟
+⠀⠀⠀⠀⠀⠀⠀    ⠀⠈⠻⠿⠿⠟⠁⠀⠀⠀⠈⠻⠿⠿⠟⠁⠀⠀⠈⠻⠿⠿⠟⠁⠀⠀⠈⠻⠿⠿⠟⠁⠀⠀⠀⠈⠻⠿⠿⠟⠁⠀⠀⠀⠀⠀⠈⠙⠻⠿⠿⠿⠿⠟⠋⠁
+
+
+╭──────────────────────────────────────────────────────────────────────────────╮
+│ Amazon Q Developer CLI is now the Kiro CLI. The Kiro CLI leverages the       │
+│ agentic features of Amazon Q Developer CLI and is fully compatible with it.  │
+│ Learn more: https://kiro.dev/cli                                             │
+╰──────────────────────────────────────────────────────────────────────────────╯
+
+
+Model: Auto (/model to change) | Plan: KIRO FREE (/usage for more detail)
+```
+
+:::note info
+Amazon Q Developer CLIはKiro CLIに統合されました。
+:::
+
+
+
+# カスタムエージェントの作成方法
+
+Kiro CLIには、カスタムエージェントというものがあり、様々なユースケース専用のエージェントを作成できます。これがめちゃくちゃ便利で、以下のようなメリットがあります。
+- 各種ツールを使用許可を事前に承認することができる
+- 常に提示したいコンテキストを登録しておくことができる
+- 各プロジェクトに特化したエージェントを作成できる
+
+エージェントは`/agent generate`コマンドを使用することで簡単に作成することができます。
+
+では、実際にAWSの調査に使用するエージェントを作成してみましょう
+
+1\. `/agent generate`実行
+```
+> /agent generate
+```
+2\. エージェントの「名前」と「説明」を記載
+```
+✔ Enter agent name:  · aws_research
+ Enter agent description:   このエージェントは、AWSについてのスペシャリストです。ユーザーが必要とする情報を迅速、正確、かつ根拠を明確に✔ Enter agent description:  · このエージェントは、AWSについてのスペシャリストです。ユーザーが必要とする情報を迅速、正確、かつ根拠を明確にしてドキュメントから「調査」し提供します。
+```
+3\. エージェントのスコープを設定（今回はグローバルで）
+```
+✔ Agent scope · Global (all workspaces)
+```
+4\. MCPサーバを設定（今回は自分で設定したいので、一旦空白で実行）
+```
+Select MCP servers (use Space to toggle, Enter to confirm): 
+```
+```
+✓ Agent 'aws_research' has been created and saved successfully!
+```
+
+以下が`/agent generate`によって生成されたjsonになります。大枠はgenerateコマンドで作成できますが、このままだと少々使いにくいので改善してみます。
+```json:~/.kiro/agents/aws_research.json 
+{
+  "name": "aws_research",
+  "description": "このエージェントは、AWSについてのスペシャリストです。ユーザーが必要とする情報を迅速、正確、かつ根拠を明確にしてドキュメントから「調査」し提供します。",
+  "prompt": "あなたはAWSのスペシャリストエージェントです。ユーザーからのAWSに関する質問に対して、迅速かつ正確な情報を提供してください。回答する際は、必ず根拠となるドキュメントや情報源を明確にし、信頼性の高い調査結果を提供することを心がけてください。技術的な詳細、ベストプラクティス、コスト最適化、セキュリティ、アーキテクチャ設計など、AWSの幅広い領域について専門知識を活用して支援してください。",
+  "mcpServers": {},
+  "tools": [
+    "*"
+  ],
+  "toolAliases": {},
+  "allowedTools": [],
+  "resources": [
+    "file://AGENTS.md",
+    "file://README.md"
+  ],
+  "hooks": {},
+  "toolsSettings": {},
+  "useLegacyMcpJson": false,
+  "model": null
+}
+```
+
+agentのjson設定は以下のドキュメントに詳しく記載があります。
+
+https://docs.aws.amazon.com/ja_jp/amazonq/latest/qdeveloper-ug/command-line-custom-agents-configuration.html
+
+
+修正する点としては、以下となります。
+- **mcpServersに`aws-knowledge-mcp-server`と`awslabs.aws-pricing-mcp-server`を設定して正確な情報ソースを閲覧できるようにする**
+- **allowedToolsで常に使用許可をするToolsを設定してツールを実行するたびに`Allow this action? Use 't' to trust (always allow) this tool for the session. [y/n/t]:
+`の一手間をなくす**
+- **modelに最新の`claude-sonnet-4.5`を設定する**
+
+```json:~/.kiro/agents/aws_research.json 
+{
+  "name": "aws_research",
+  "description": "このエージェントは、AWSについてのスペシャリストです。ユーザーが必要とする情報を迅速、正確、かつ根拠を明確にしてドキュメントから「調査」し提供します。",
+  "prompt": "あなたはAWSのスペシャリストエージェントです。ユーザーからのAWSに関する質問に対して、迅速かつ正確な情報を提供してください。回答する際は、必ず根拠となるドキュメントや情報源を明確にし、信頼性の高い調査結果を提供することを心がけてください。技術的な詳細、ベストプラクティス、コスト最適化、セキュリティ、アーキテクチャ設計など、AWSの幅広い領域について専門知識を活用して支援してください。",
+  "mcpServers": {
+    "aws-knowledge-mcp-server": {
+      "args": [
+        "fastmcp",
+        "run",
+        "https://knowledge-mcp.global.api.aws"
+      ],
+      "command": "uvx"
+    },
+    "awslabs.aws-pricing-mcp-server": {
+      "command": "uvx",
+      "args": [
+         "awslabs.aws-pricing-mcp-server@latest"
+      ],
+      "env": {
+        "AWS_REGION": "ap-northeast-1"
+      },
+      "disabled": false,
+      "autoApprove": []
+    }
+  },
+  "tools": [
+    "*"
+  ],
+  "toolAliases": {},
+  "allowedTools": [
+    "read",
+    "@aws-knowledge-mcp-server/aws___get_regional_availability",
+    "@aws-knowledge-mcp-server/aws___list_regions",
+    "@aws-knowledge-mcp-server/aws___read_documentation",
+    "@aws-knowledge-mcp-server/aws___recommend",
+    "@aws-knowledge-mcp-server/aws___search_documentation",
+    "@awslabs.aws-pricing-mcp-server/get_pricing_service_codes",
+    "@awslabs.aws-pricing-mcp-server/get_pricing_service_attributes",
+    "@awslabs.aws-pricing-mcp-server/get_pricing_attribute_values",
+    "@awslabs.aws-pricing-mcp-server/get_pricing",
+    "@awslabs.aws-pricing-mcp-server/get_price_list_urls",
+    "@awslabs.aws-pricing-mcp-server/get_bedrock_patterns",
+    "@awslabs.aws-pricing-mcp-server/analyze_cdk_project",
+    "@awslabs.aws-pricing-mcp-server/analyze_terraform_project",
+    "@awslabs.aws-pricing-mcp-server/generate_cost_report"
+  ],
+  "resources": [
+    "file://AGENTS.md",
+    "file://README.md"
+  ],
+  "hooks": {},
+  "toolsSettings": {},
+  "useLegacyMcpJson": false,
+  "model": "claude-sonnet-4.5"
+}
+```
+
+上記修正をして、kiro-cliを起動してみます。
+```
+kiro-cli chat --agent aws_research
+```
+そしてMCPとtrustedのツールが問題なく設定されているか確認します。
+```
+[aws_research] > /mcp
+
+awslabs.aws-pricing-mcp-server
+▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔
+[2025:15:15]: ✓ awslabs.aws-pricing-mcp-server loaded in 0.47 s
+
+aws-knowledge-mcp-server
+▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔
+[2025:15:16]: ✓ aws-knowledge-mcp-server loaded in 1.71 s
+
+
+
+[aws_research] > /tools
+
+
+Tool                                 Permission
+▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔Built-in
+- shell                              not trusted
+- read                               trusted
+- write                              not trusted
+- introspect                         trusted
+- report                             not trusted
+- aws                                trust read-only commands
+
+aws-knowledge-mcp-server (MCP)
+- aws___get_regional_availability    trusted
+- aws___list_regions                 trusted
+- aws___read_documentation           trusted
+- aws___recommend                    trusted
+- aws___search_documentation         trusted
+
+awslabs.aws-pricing-mcp-server (MCP)
+- analyze_cdk_project                trusted
+- analyze_terraform_project          trusted
+- generate_cost_report               trusted
+- get_bedrock_patterns               trusted
+- get_price_list_urls                trusted
+- get_pricing                        trusted
+- get_pricing_attribute_values       trusted
+- get_pricing_service_attributes     trusted
+- get_pricing_service_codes          trusted
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+# 実際のユースケース
+
+先ほど作成したエージェントを実際のユースケースで使用してみます。色々なパターンで実践し、結果も添付してみたので、確認してみて下さい。**結果を見るとちゃんとMCP経由でドキュメントを読みに行ってくれているのがわかります。**
+
+### 1. リージョン可用性の調査
+
+> Amazon Bedrockは東京リージョンで利用できますか？Claude 3.5 Sonnetは使えますか?
+
+特定のサービスや機能が目的のリージョンで利用可能かを調査してみます。
+
+<details><summary>実行結果</summary>
+
+```
+[aws_research] > Amazon Bedrockは東京リージョンで利用できますか？Claude 3.5 Sonnetは使えますか?
+
+Running tool aws___get_regional_availability with the param (from mcp server: aws-knowledge-mcp-server)
+ ⋮  {
+ ⋮    "region": "ap-northeast-1",
+ ⋮    "resource_type": "product",
+ ⋮    "filters": [
+ ⋮      "Amazon Bedrock"
+ ⋮    ]
+ ⋮  }
+Running tool aws___search_documentation with the param (from mcp server: aws-knowledge-mcp-server)
+ ⋮  {
+ ⋮    "search_phrase": "Amazon Bedrock Claude 3.5 Sonnet Tokyo ap-northeast-1 region availability",
+ ⋮    "limit": 5
+ ⋮  }
+ - Completed in 7.562s
+
+ - Completed in 3.787s
+
+> 結論：はい、両方とも東京リージョン（ap-northeast-1）で利用可能です。
+
+## 調査結果
+
+### Amazon Bedrock
+- **東京リージョンでの利用可能性**: ✅ 利用可能（isAvailableIn）
+- **根拠**: AWS Regional Availability APIによる確認
+
+### Claude 3.5 Sonnet
+- **東京リージョンでの利用可能性**: ✅ 利用可能
+- **根拠**: AWS公式ドキュメントより
+  - [Bedrock Agents on Sonnet 3.5](https://aws.amazon.com/about-aws/whats-new/2024/09/bedrock-agents-sonnet-3-5/)では、Claude 3.5 Sonnet
+がAsia Pacific (Tokyo)を含む複数リージョンでサポートされていることを明記
+  - [Knowledge Bases for Amazon Bedrock](https://aws.amazon.com/about-aws/whats-new/2024/08/knowledge-bases-amazon-bedrock-anthropics-
+claude-3-5-sonnet/)でも、東京リージョン（Asia Pacific Tokyo）での一般提供を確認
+
+### 利用可能な機能
+東京リージョンでClaude 3.5 Sonnetを使用できる主な機能：
+- Bedrock Agents（エージェント機能）
+- Knowledge Bases（RAG機能）
+- 標準的なAPI呼び出し（InvokeModel）
+- 200,000トークンのコンテキストウィンドウ
+
+すぐに利用を開始したい場合は、Amazon Bedrockコンソールからアクセスできます。
+ ▸ Credits: 0.23 • Time: 25s
+
+```
+
+</details>
+
+
+### 2. 料金比較と最適化
+> EC2のt3.mediumとt3.largeの東京リージョンでの料金を比較してください
+
+具体的な料金情報を取得し、コスト最適化の判断材料を提供します。
+
+<details><summary>実行結果</summary>
+
+```
+[aws_research] > EC2のt3.mediumとt3.largeの東京リージョンでの料金を比較してください
+
+Running tool get_pricing with the param (from mcp server: awslabs.aws-pricing-mcp-server)
+ ⋮  {
+ ⋮    "service_code": "AmazonEC2",
+ ⋮    "region": "ap-northeast-1",
+ ⋮    "filters": [
+ ⋮      {
+ ⋮        "Field": "instanceType",
+ ⋮        "Value": [
+ ⋮          "t3.medium",
+ ⋮          "t3.large"
+ ⋮        ],
+ ⋮        "Type": "ANY_OF"
+ ⋮      },
+ ⋮      {
+ ⋮        "Field": "operatingSystem",
+ ⋮        "Value": "Linux",
+ ⋮        "Type": "EQUALS"
+ ⋮      },
+ ⋮      {
+ ⋮        "Field": "tenancy",
+ ⋮        "Value": "Shared",
+ ⋮        "Type": "EQUALS"
+ ⋮      },
+ ⋮      {
+ ⋮        "Field": "capacitystatus",
+ ⋮        "Value": "Used",
+ ⋮        "Type": "EQUALS"
+ ⋮      },
+ ⋮      {
+ ⋮        "Field": "preInstalledSw",
+ ⋮        "Value": "NA",
+ ⋮        "Type": "EQUALS"
+ ⋮      }
+ ⋮    ],
+ ⋮    "output_options": {
+ ⋮      "pricing_terms": [
+ ⋮        "OnDemand"
+ ⋮      ],
+ ⋮      "product_attributes": [
+ ⋮        "instanceType",
+ ⋮        "memory",
+ ⋮        "vcpu",
+ ⋮        "storage",
+ ⋮        "networkPerformance"
+ ⋮      ]
+ ⋮    }
+ ⋮  }
+ - Completed in 1.73s
+
+> ## EC2 東京リージョン（ap-northeast-1）料金比較
+
+### t3.medium vs t3.large
+
+| 項目 | t3.medium | t3.large | 差額 |
+|------|-----------|----------|------|
+| 時間単価 | $0.0544/時間 | $0.1088/時間 | $0.0544/時間 |
+| 月額（730時間） | $39.71/月 | $79.42/月 | $39.71/月 |
+| 年額 | $476.54/年 | $953.09/年 | $476.54/年 |
+
+### スペック比較
+
+| 項目 | t3.medium | t3.large |
+|------|-----------|----------|
+| vCPU | 2 | 2 |
+| メモリ | 4 GiB | 8 GiB |
+| ストレージ | EBS only | EBS only |
+| ネットワーク | Up to 5 Gigabit | Up to 5 Gigabit |
+
+### 主な違い
+- **t3.largeはt3.mediumの正確に2倍の料金**
+- **メモリが2倍**（4 GiB → 8 GiB）
+- vCPU数、ネットワーク性能は同じ
+
+### 選択のポイント
+- メモリ使用量が4 GiB以下で収まるワークロード → t3.medium
+- メモリ集約型アプリケーション（8 GiB必要） → t3.large
+- コスト効率は同じ（$0.0136/GiB/時間）
+
+根拠: AWS Pricing API（2025年11月1日有効価格、2025年11月20日公開データ）
+ ▸ Credits: 0.28 • Time: 23s
+
+```
+
+</details>
+
+### 3. ベストプラクティスの調査
+
+> S3バケットのセキュリティベストプラクティスについて、公式ドキュメントから教えてください
+
+公式ドキュメントから信頼性の高い情報を抽出します。
+
+<details><summary>実行結果</summary>
+
+```
+[aws_research] > S3バケットのセキュリティベストプラクティスについて、公式ドキュメントから教えてください
+
+Running tool aws___search_documentation with the param (from mcp server: aws-knowledge-mcp-server)
+ ⋮  {
+ ⋮    "search_phrase": "S3 bucket security best practices",
+ ⋮    "limit": 5
+ ⋮  }
+ - Completed in 4.493s
+
+Running tool aws___read_documentation with the param (from mcp server: aws-knowledge-mcp-server)
+ ⋮  {
+ ⋮    "url": "https://docs.aws.amazon.com/AmazonS3/latest/userguide/security-best-practices.html",
+ ⋮    "max_length": 15000
+ ⋮  }
+ - Completed in 3.295s
+
+Running tool aws___read_documentation with the param (from mcp server: aws-knowledge-mcp-server)
+ ⋮  {
+ ⋮    "url": "https://docs.aws.amazon.com/AmazonS3/latest/userguide/security-best-practices.html",
+ ⋮    "start_index": 15000,
+ ⋮    "max_length": 15000
+ ⋮  }
+ - Completed in 3.397s
+
+> ## S3バケットのセキュリティベストプラクティス
+
+AWS公式ドキュメントから抽出した主要なセキュリティベストプラクティスを以下にまとめます。
+
+### 🔒 アクセス制御
+
+1. ACL（アクセスコントロールリスト）を無効化
+- デフォルトで「バケット所有者強制」設定を使用
+- IAMポリシー、バケットポリシー、VPCエンドポイントポリシーなどで管理
+- 権限管理と監査が簡素化される
+
+2. バケットを公開アクセスから保護
+- S3 Block Public Accessを使用（推奨）
+- "Principal": "*" のようなワイルドカードポリシーを特定
+- AWS Trusted Advisorで定期的に検査
+- AWS Config管理ルールを実装：
+  - s3-bucket-public-read-prohibited
+  - s3-bucket-public-write-prohibited
+
+3. 最小権限の原則を実装
+- 必要な権限のみを付与
+- IAMポリシーアクションと権限境界を活用
+
+4. IAMロールを使用
+- EC2やLambdaなどからのアクセスには長期認証情報ではなくIAMロールを使用
+- 一時的な認証情報が自動的にローテーションされる
+
+### 🔐 暗号化
+
+5. 保存データの暗号化
+- すべてのS3バケットはデフォルトで暗号化設定済み
+- 暗号化オプション：
+  - **SSE-S3**（デフォルト）：Amazon S3管理キー
+  - **SSE-KMS**：AWS KMS管理キー
+  - **DSSE-KMS**：二重層暗号化
+  - **SSE-C**：顧客提供キー（2026年4月から制限）
+
+6. 転送中データの暗号化を強制
+- HTTPS（TLS）のみを許可
+- バケットポリシーでaws:SecureTransport条件を使用
+- AWS Config管理ルール s3-bucket-ssl-requests-only を実装
+- CloudWatchアラームでHTTPアクセス試行を監視
+
+### 🛡️ データ保護
+
+7. S3 Object Lockを検討
+- WORM（Write Once Read Many）モデルでオブジェクトを保存
+- 誤削除や不適切な削除を防止
+
+8. S3バージョニングを有効化
+- オブジェクトの複数バージョンを保持
+- 意図しない削除やアプリケーション障害から復旧可能
+- AWS Config管理ルール s3-bucket-versioning-enabled を実装
+
+9. クロスリージョンレプリケーション（CRR）を検討
+- コンプライアンス要件に対応
+- 地理的に離れたリージョン間でデータを複製
+- ソースとターゲット両方でバージョニングが必要
+
+10. VPCエンドポイントを使用
+- インターネットを経由せずにS3にアクセス
+- データ流出を防止
+- バケットポリシーでアクセス制御
+
+### 📊 監視と監査
+
+11. すべてのS3バケットを特定・監査
+- Tag Editorでセキュリティ重要リソースにタグ付け
+- S3 Inventoryでレプリケーションと暗号化状態を監査
+
+12. AWSモニタリングツールで監視
+- CloudWatchメトリクスを監視：
+  - PutRequests、GetRequests
+  - 4xxErrors、DeleteRequests
+
+13. S3サーバーアクセスログを有効化
+- バケットへのリクエストの詳細記録
+- セキュリティ監査とアクセス監査に活用
+- AWS Config管理ルール s3-bucket-logging-enabled を実装
+
+14. AWS CloudTrailを使用
+- API呼び出しの記録（誰が、いつ、何を実行したか）
+- データイベントログを有効化してオブジェクトレベルのAPI操作を記録
+- AWS Config管理ルール cloudtrail-s3-dataevents-enabled を実装
+
+15. AWS Configを有効化
+- リソース設定の変更を記録
+- コンプライアンス評価を自動化
+- 内部ガイドラインに対する全体的なコンプライアンスを判断
+
+### 🔧 その他のベストプラクティス
+
+16. 予測不可能なバケット名を作成
+- GUID（グローバル一意識別子）を追加（例：amazon-s3-demo-bucket-a1b2c3d4-5678-90ab-cdef-example11111）
+- バケットは削除せず、空にして保持することを推奨
+
+17. マネージドAWSセキュリティサービスを使用
+- Amazon GuardDuty
+- Amazon Detective
+- IAM Access Analyzer
+- Amazon Macie（機密データの検出）
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+
+根拠: [AWS公式ドキュメント - Security best practices for Amazon S3](https://docs.aws.amazon.com/AmazonS3/latest/userguide/security-best-
+practices.html)
+
+これらのベストプラクティスを組み合わせて実装することで、S3バケットの包括的なセキュリティ体制を構築できます。
+ ▸ Credits: 0.69 • Time: 50s
+
+```
+
+</details>
+
+### 4. 新機能の発見
+
+> Amazon Bedrockの最新機能について教えてください
+
+最新のAWSアップデートや新機能を調査します。
+
+<details><summary>実行結果</summary>
+
+```
+[aws_research] > Amazon Bedrockの最新機能について教えてください
+
+Running tool aws___search_documentation with the param (from mcp server: aws-knowledge-mcp-server)
+ ⋮  {
+ ⋮    "limit": 3,
+ ⋮    "search_phrase": "Amazon Bedrock new features latest"
+ ⋮  }
+Running tool aws___recommend with the param (from mcp server: aws-knowledge-mcp-server)
+ ⋮  {
+ ⋮    "url": "https://docs.aws.amazon.com/bedrock/latest/userguide/what-is-bedrock.html"
+ ⋮  }
+ - Completed in 4.828s
+
+ - Completed in 3.126s
+
+Running tool aws___read_documentation with the param (from mcp server: aws-knowledge-mcp-server)
+ ⋮  {
+ ⋮    "url": "https://aws.amazon.com/blogs/aws/new-amazon-bedrock-capabilities-enhance-data-processing-and-retrieval/",
+ ⋮    "max_length": 10000
+ ⋮  }
+Running tool aws___read_documentation with the param (from mcp server: aws-knowledge-mcp-server)
+ ⋮  {
+ ⋮    "url": "https://aws.amazon.com/about-aws/whats-new/2025/03/amazon-bedrock-multi-agent-collaboration/",
+ ⋮    "max_length": 5000
+ ⋮  }
+ - Completed in 4.306s
+
+ - Completed in 3.266s
+
+> ## Amazon Bedrockの最新機能
+
+AWS公式ドキュメントとブログから抽出した最新機能をご紹介します。
+
+### 🆕 1. マルチエージェントコラボレーション（2025年3月GA）
+
+概要: 複数の専門エージェントがスーパーバイザーエージェントの指導の下で連携・調整できる機能
+
+主要な機能強化:
+- **Inline Agents**: 実行時にエージェントの役割と動作を動的に調整可能
+- **Payload Referencing**: データを埋め込む代わりにリンクデータを参照することで、データ転送を削減し、レスポンス時間を改善、運用コストを
+削減
+- **CloudFormation/CDK対応**: 再利用可能なエージェントチームをテンプレートとして作成し、組織内のアカウント間で共有可能
+- **エージェント監視と可観測性**: エージェントのインタラクションを追跡・監視・最適化し、デバッグとトレーサビリティを向上
+
+利用可能リージョン: Amazon Bedrockがサポートされているすべてのリージョン
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+
+### 🆕 2. Amazon Bedrock Data Automation（プレビュー）
+
+概要: ドキュメント、画像、音声、動画などの非構造化マルチモーダルコンテンツから洞察を自動抽出するフルマネージド機能
+
+サポートモダリティ: 4種類（ドキュメント、画像、動画、音声）
+
+出力タイプ:
+- **標準出力**: 事前定義されたデフォルトの洞察（動画のシーン別サマリー、音声の文字起こしなど）
+- **カスタム出力**: ブループリントを使用してビジネスニーズに合わせた洞察を抽出
+
+ユースケース例:
+- 自動車保険会社: 請求処理ワークフローの自動化
+- メディア企業: TV番組の分析と広告配置のための洞察抽出
+- 金融サービス: チャートや表を含む複雑な財務文書の処理
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+
+### 🆕 3. Knowledge Basesのマルチモーダルデータ処理
+
+概要: ドキュメントや画像内のテキストと視覚要素の両方を処理できるように
+
+パーサーオプション:
+- Amazon Bedrock Data Automation
+- ファウンデーションモデル（FM）
+
+メリット: 画像とテキストの両方に埋め込まれた情報を含むナレッジベースからの応答の精度と関連性が向上
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+
+### 🆕 4. Knowledge BasesのGraphRAG対応（プレビュー）
+
+概要: 業界初のフルマネージドGraphRAG機能
+
+特徴: RAG技術とグラフを組み合わせることで、より正確で包括的な応答を提供
+
+ユースケース: 異なる金融エンティティ間の関係を理解するなど
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+
+### 🆕 5. Knowledge Basesの構造化データ検索
+
+概要: データウェアハウスやデータレイクに対する自然言語クエリをサポート
+
+メリット:
+- 会話型インターフェースを通じてビジネスインテリジェンス（BI）にアクセス
+- 重要なエンタープライズデータを含めることで応答精度を向上
+- データサイロを解消
+- 生成AIアプリケーションの構築期間を1ヶ月以上から数日に短縮
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+
+### 📋 その他の最新アップデート（ドキュメント推奨より）
+
+- **カスタムチャットテンプレートとトークナイザー対応**（2025年11月21日追加）
+- **インポートモデルの高度なAPI機能**（2025年11月21日追加）
+- **Guardrailsのコードドメインサポート**（2025年11月20日追加）
+- **Guardrailsのクロスアカウント保護適用**（2025年11月20日追加）
+- **サービスティアによるパフォーマンスとコスト最適化**（2025年11月20日追加）
+- **地理的クロスリージョン推論**（2025年11月15日追加）
+- **グローバルクロスリージョン推論**（2025年11月15日追加）
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+
+根拠:
+- [Amazon Bedrock multi-agent collaboration GA発表](https://aws.amazon.com/about-aws/whats-new/2025/03/amazon-bedrock-multi-agent-
+collaboration/)（2025年3月10日）
+- [Amazon Bedrock Data Automation発表ブログ](https://aws.amazon.com/blogs/aws/new-amazon-bedrock-capabilities-enhance-data-processing-
+and-retrieval/)（2024年12月4日）
+- [Amazon Bedrock公式ドキュメント推奨ページ](https://docs.aws.amazon.com/bedrock/latest/userguide/what-is-bedrock.html)
+
+これらの機能により、より高度で包括的なAIアプリケーションの構築が可能になっています。
+ ▸ Credits: 0.70 • Time: 50s
+
+```
+
+</details>
+
+### 5. アーキテクチャ設計の調査
+
+> サーバーレスWebアプリケーションのアーキテクチャパターンについて、AWS公式の推奨事項を教えてください
+
+アーキテクチャ設計に関する公式ガイダンスを提供します。
+
+<details><summary>実行結果</summary>
+
+```
+[aws_research] > サーバーレスWebアプリケーションのアーキテクチャパターンについて、AWS公式の推奨事項を教えてください
+
+Running tool aws___search_documentation with the param (from mcp server: aws-knowledge-mcp-server)
+ ⋮  {
+ ⋮    "limit": 5,
+ ⋮    "search_phrase": "serverless web application architecture pattern best practices"
+ ⋮  }
+ - Completed in 4.402s
+
+Running tool aws___read_documentation with the param (from mcp server: aws-knowledge-mcp-server)
+ ⋮  {
+ ⋮    "url": "https://docs.aws.amazon.com/wellarchitected/latest/serverless-applications-lens/general-design-principles.html",
+ ⋮    "max_length": 10000
+ ⋮  }
+Running tool aws___search_documentation with the param (from mcp server: aws-knowledge-mcp-server)
+ ⋮  {
+ ⋮    "limit": 3,
+ ⋮    "search_phrase": "serverless web application reference architecture CloudFront API Gateway Lambda DynamoDB"
+ ⋮  }
+ - Completed in 3.759s
+
+ - Completed in 3.502s
+
+Running tool aws___read_documentation with the param (from mcp server: aws-knowledge-mcp-server)
+ ⋮  {
+ ⋮    "url": "https://docs.aws.amazon.com/wellarchitected/latest/serverless-applications-lens/web-application.html",
+ ⋮    "max_length": 10000
+ ⋮  }
+ - Completed in 3.605s
+
+> ## サーバーレスWebアプリケーションのアーキテクチャパターン
+
+AWS Well-Architected Framework - Serverless Applications Lensから抽出した公式推奨事項をご紹介します。
+
+### 📐 リファレンスアーキテクチャ
+
+[ユーザー] 
+    ↓
+[Amazon CloudFront] ← 静的コンテンツ配信・APIキャッシング
+    ↓
+[Amazon S3] ← 静的アセット（HTML/CSS/JS/画像）
+    ↓
+[Amazon API Gateway] ← セキュアなHTTPSエンドポイント
+    ↓
+[Amazon Cognito] ← ユーザー認証・認可（JWT発行）
+    ↓
+[AWS Lambda] ← CRUD操作ロジック
+    ↓
+[Amazon DynamoDB] ← NoSQLデータストア
+
+
+### 🎯 主要コンポーネントと役割
+
+1. Amazon Cognito User Pools
+- ユーザー管理とIDプロバイダー機能
+- API Gatewayへのリクエスト認証用トークン発行
+
+2. Amazon CloudFront
+- 静的アセットとバックエンドAPIコールの配信高速化
+- グローバルPoP（Points of Presence）でコンテンツをユーザーに近づける
+- APIコールのキャッシングでバックエンド負荷を軽減
+
+3. Amazon S3
+- 静的Webアプリケーションアセット（HTML、CSS、JavaScript、画像）のホスティング
+- CloudFront経由でセキュアに配信
+
+4. Amazon API Gateway
+- セキュアなHTTPSエンドポイント
+- REST API呼び出しの受付（カスタムドメインまたはAPI Gateway提供ドメイン）
+- Lambda Authorizerによる認証・認可
+
+5. AWS Lambda
+- DynamoDBに対するCRUD操作の実行
+- 各関数に個別のIAMロールを割り当て
+
+6. Amazon DynamoDB
+- Webアプリケーションと共に弾力的にスケールするNoSQLデータストア
+
+### 🏗️ 設計原則（7つの基本原則）
+
+1. Speedy, Simple, Singular（高速・シンプル・単一目的）
+- 関数は簡潔で短く、単一目的
+- トランザクションはコスト効率を意識し、高速な起動を優先
+
+2. Think Concurrent Requests（同時リクエストで考える）
+- 総リクエスト数ではなく、同時実行数ベースで設計
+- 同時実行モデルを活用
+
+3. Share Nothing（何も共有しない）
+- 関数実行環境とインフラは短命
+- ローカルリソース（一時ストレージ）は保証されない
+- 永続的なデータには永続ストレージを使用
+
+4. Assume No Hardware Affinity（ハードウェア非依存）
+- 基盤インフラは変更される可能性がある
+- ハードウェア非依存のコードと依存関係を使用
+
+5. Orchestrate with State Machines（ステートマシンでオーケストレーション）
+- Lambda関数の連鎖ではなく、AWS Step Functionsを使用
+- モノリシックで密結合なアプリケーションを回避
+
+6. Use Events to Trigger Transactions（イベント駆動）
+- S3オブジェクト書き込みやDB更新などのイベントでトランザクションをトリガー
+- 非同期イベント処理でリーンなサービス設計を実現
+
+7. Design for Failures and Duplicates（障害と重複を前提に設計）
+- すべての操作を冪等に設計
+- 障害発生とイベント重複配信を想定
+- ダウンストリーム呼び出しに適切なリトライを実装
+
+### 💡 追加の推奨事項
+
+デプロイメント:
+- シングルページアプリケーションには**AWS Amplify Hosting**を使用（アトミックデプロイ、キャッシュ失効、カスタムドメイン管理）
+- インフラストラクチャをコード化（AWS SAM、CDK、Terraform）
+- 本番環境と開発環境を分離
+
+パーソナライゼーション:
+- API Gateway使用量プランでユーザー階層別のスループット制御
+- Amazon Cognito User Poolsで特定リソースや機能へのアクセス制御
+
+パフォーマンス最適化:
+- Amazon ElastiCacheでデータベースパフォーマンス向上
+- CloudFrontでAPIキャッシング
+
+マルチリージョン対応:
+- **Active-Passive**: コスト効率的、RTO/RPO要件に対応
+- **Active-Active**: 高可用性、迅速なフェイルオーバー（コスト高）
+
+### 🎨 アーキテクチャの特徴
+
+✅ スケーラブル、レジリエント、高可用性  
+✅ 運用オーバーヘッドの削減（マネージドサービス活用）  
+✅ 使用量ベースのコスト最適化（アイドルリソースへの課金なし）  
+✅ グローバル展開が数分で可能  
+✅ 拡張が容易で影響が限定的  
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+
+根拠:
+- [AWS Well-Architected Framework - Serverless Applications Lens: Web Application](https://docs.aws.amazon.com/wellarchitected/latest/
+serverless-applications-lens/web-application.html)
+- [AWS Well-Architected Framework - Serverless Design Principles](https://docs.aws.amazon.com/wellarchitected/latest/serverless-
+applications-lens/general-design-principles.html)
+- [AWS Serverless Multi-Tier Architectures](https://docs.aws.amazon.com/whitepapers/latest/serverless-multi-tier-architectures-api-
+gateway-lambda/web-application.html)
+
+このリファレンスアーキテクチャは、スケーラブルで安全、かつコスト効率の高いサーバーレスWebアプリケーションを構築するためのAWS公式の推奨パ
+ターンです。
+ ▸ Credits: 0.84 • Time: 57s
+
+
+```
+
+</details>
+
+### 6. マルチリージョン比較
+
+> DynamoDBのオンデマンド料金を、東京、バージニア北部、シンガポールで比較してください
+
+複数リージョンでのコスト比較を実施します。
+
+<details><summary>実行結果</summary>
+
+```
+[aws_research] > DynamoDBのオンデマンド料金を、東京、バージニア北部、シンガポールで比較してください
+
+Running tool get_pricing with the param (from mcp server: awslabs.aws-pricing-mcp-server)
+ ⋮  {
+ ⋮    "service_code": "AmazonDynamoDB",
+ ⋮    "region": [
+ ⋮      "ap-northeast-1",
+ ⋮      "us-east-1",
+ ⋮      "ap-southeast-1"
+ ⋮    ],
+ ⋮    "filters": [
+ ⋮      {
+ ⋮        "Field": "group",
+ ⋮        "Value": "DDB-OnDemand",
+ ⋮        "Type": "EQUALS"
+ ⋮      }
+ ⋮    ],
+ ⋮    "output_options": {
+ ⋮      "pricing_terms": [
+ ⋮        "OnDemand"
+ ⋮      ],
+ ⋮      "product_attributes": [
+ ⋮        "group",
+ ⋮        "groupDescription",
+ ⋮        "usagetype"
+ ⋮      ]
+ ⋮    }
+ ⋮  }
+ - Completed in 0.663s
+
+Running tool get_pricing_service_attributes with the param (from mcp server: awslabs.aws-pricing-mcp-server)
+ ⋮  {
+ ⋮    "service_code": "AmazonDynamoDB"
+ ⋮  }
+ - Completed in 0.490s
+
+Running tool get_pricing_attribute_values with the param (from mcp server: awslabs.aws-pricing-mcp-server)
+ ⋮  {
+ ⋮    "service_code": "AmazonDynamoDB",
+ ⋮    "attribute_names": [
+ ⋮      "group",
+ ⋮      "usagetype"
+ ⋮    ],
+ ⋮    "filters": {
+ ⋮      "group": "OnDemand"
+ ⋮    }
+ ⋮  }
+ - Completed in 0.827s
+
+Running tool get_pricing with the param (from mcp server: awslabs.aws-pricing-mcp-server)
+ ⋮  {
+ ⋮    "service_code": "AmazonDynamoDB",
+ ⋮    "output_options": {
+ ⋮      "pricing_terms": [
+ ⋮        "OnDemand"
+ ⋮      ],
+ ⋮      "product_attributes": [
+ ⋮        "usagetype",
+ ⋮        "groupDescription"
+ ⋮      ]
+ ⋮    },
+ ⋮    "filters": [
+ ⋮      {
+ ⋮        "Value": [
+ ⋮          "APN1-ReadRequestUnits",
+ ⋮          "APN1-WriteRequestUnits",
+ ⋮          "APS1-ReadRequestUnits",
+ ⋮          "APS1-WriteRequestUnits",
+ ⋮          "ReadRequestUnits",
+ ⋮          "WriteRequestUnits"
+ ⋮        ],
+ ⋮        "Field": "usagetype",
+ ⋮        "Type": "ANY_OF"
+ ⋮      }
+ ⋮    ],
+ ⋮    "region": [
+ ⋮      "ap-northeast-1",
+ ⋮      "us-east-1",
+ ⋮      "ap-southeast-1"
+ ⋮    ]
+ ⋮  }
+ - Completed in 0.507s
+
+> ## DynamoDB オンデマンド料金 - リージョン比較
+
+### 📊 リージョン別料金比較
+
+| 項目 | 東京<br>(ap-northeast-1) | バージニア北部<br>(us-east-1) | シンガポール<br>(ap-southeast-1) |
+|------|------------------------|---------------------------|----------------------------|
+| 読み込みリクエスト | $0.1425/百万RRU | $0.125/百万RRU | $0.1425/百万RRU |
+| 書き込みリクエスト | $0.715/百万WRU | $0.625/百万WRU | $0.71/百万WRU |
+
+### 💰 詳細な料金分析
+
+#### 読み込みリクエスト（Read Request Units）
+
+| リージョン | 100万RRU単価 | バージニア北部比 |
+|-----------|-------------|----------------|
+| バージニア北部 | $0.125 | 基準 (100%) |
+| 東京 | $0.1425 | +14% |
+| シンガポール | $0.1425 | +14% |
+
+#### 書き込みリクエスト（Write Request Units）
+
+| リージョン | 100万WRU単価 | バージニア北部比 |
+|-----------|-------------|----------------|
+| バージニア北部 | $0.625 | 基準 (100%) |
+| シンガポール | $0.71 | +13.6% |
+| 東京 | $0.715 | +14.4% |
+
+### 📈 使用量別コスト試算
+
+月間使用量: 1億リクエスト（読み込み50%、書き込み50%）の場合
+
+| リージョン | 読み込みコスト | 書き込みコスト | 合計月額 |
+|-----------|--------------|--------------|---------|
+| バージニア北部 | $6.25 | $31.25 | $37.50 |
+| シンガポール | $7.13 | $35.50 | $42.63 (+13.7%) |
+| 東京 | $7.13 | $35.75 | $42.88 (+14.3%) |
+
+### 🔍 主な発見事項
+
+1. 最安リージョン: バージニア北部（us-east-1）が最も安価
+2. アジア太平洋リージョン: 東京とシンガポールはほぼ同等の料金
+3. コスト差: アジア太平洋リージョンはバージニア北部より約14%高い
+4. 書き込みコスト: 読み込みの約5倍のコスト（全リージョン共通）
+
+### 💡 推奨事項
+
+- **コスト最適化優先**: バージニア北部を選択
+- **レイテンシ重視**: アジア太平洋のユーザーには東京またはシンガポールを選択
+- **読み書き比率**: 書き込みが多いワークロードではリージョン選択がコストに大きく影響
+- **グローバル展開**: グローバルテーブルを使用する場合、レプリケーションコストも考慮が必要
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+
+根拠: AWS Pricing API（2025年7月1日有効価格、2025年8月28日公開データ）
+ ▸ Credits: 1.23 • Time: 38s
+
+```
+
+</details>
+
+# 最後に
+
+今回は、以下の2点にフォーカスしたエージェントを作成してみました。AWSを業務で使用している人は、上記のエージェントでかなり業務の改善になるかなと思います。
+- AWSのドキュメント内での調査
+- AWSの価格調査
+
+構成図の作成やIaCのコーディングなど様々な用途に特化したエージェントを作成することでより便利になります。Kiro CLIを使用することで、業務のスピードがかなり変化すること間違い無いので、まだ使用したことがない人は是非使用してみて下さい。
+
+AWSが公開しているMCPサーバは↓で確認できます。
+
+https://awslabs.github.io/mcp/
